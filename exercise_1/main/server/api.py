@@ -11,12 +11,13 @@ def get(key):
   if value is None:
     return "Key %s does not exist" % key
   request_body = request.json
+  print(request_body)
   if "uid" not in request_body:
     return "No 'uid' in request body. The request must provide user id"
   uid = request_body["uid"]
   if value.uid != uid:
     return "Cannot access the content associated with key %s owned by other user" % key
-  return value
+  return value.content
 
 
 @api.route("/<key>", methods=["POST"])
@@ -49,7 +50,7 @@ def remove(key):
   if "uid" not in request_body:
     return "No 'uid' in request body. The request must provide user id"
   uid = request_body["uid"]
-  if value.uid != uid:
+  if current_app.ff.get(key).uid != uid:
     return "Cannot delete the content associated with key %s owned by other user" % key
   value = current_app.ff.remove(key)
   if value is None:
