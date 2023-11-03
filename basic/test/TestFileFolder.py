@@ -68,6 +68,19 @@ class TestFileFolder(unittest.TestCase):
         self.assertEqual(len(listed_files), len(file_names))
         for name, _ in listed_files:
             self.assertIn(name, file_names)
+    def test_size_update_on_put_and_remove(self):
+        # Check initial size
+        initial_size = self.file_folder._FileFolder__size  # Accessing the private variable for testing
+        self.assertEqual(initial_size, self.size)
 
+        # Add a new file and check size decrement
+        file_name = 'test_size_file.txt'
+        file_content = 'Size test'
+        self.assertTrue(self.file_folder.put(file_name, file_content))
+        self.assertEqual(self.file_folder._FileFolder__size, initial_size - len(file_content))
+
+        # Remove the file and check size increment
+        self.file_folder.remove(file_name)
+        self.assertEqual(self.file_folder._FileFolder__size, initial_size)
 if __name__ == '__main__':
     unittest.main()
