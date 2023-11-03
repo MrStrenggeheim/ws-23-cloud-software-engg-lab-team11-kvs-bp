@@ -46,10 +46,12 @@ class FileFolder:
         Note that `File.size`, `File.last_modified` and `FileFolder.size` should be considered
         """
         if name not in self.__folder and len(content) > self.__size:
+            # print(f" {len(content), self.__size=} --> OVER THE CAPACITY!!")
             return False
         elif name in self.__folder:
             file = self.__folder[name]
             if len(content) - len(file.content) > self.__size:
+                # print(f" {len(content), len(file.content)=} --> OVER THE CAPACITY!")
                 return False
             self.__size -= len(content) - len(file.content)
             file.content = content
