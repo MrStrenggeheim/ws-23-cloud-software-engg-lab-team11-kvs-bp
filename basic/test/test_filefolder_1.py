@@ -1,29 +1,31 @@
 import unittest
-from ..filefolder import FileFolder
-from datetime import datetime
 import os
+if __name__ == "__main__":
+    import sys
+    sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from filefolder import FileFolder
 import tempfile
 
-class TestFileFolder(unittest.TestCase):
 
+class TestFileFolder1(unittest.TestCase):
     def setUp(self):
         # Create a temporary directory
         self.test_dir = tempfile.mkdtemp()
-        self.source = os.path.join(self.test_dir, 'test_filefolder.sqlite')
+        self.source = os.path.join(self.test_dir, 'test_filefolder_1.sqlite')
         self.size = 1000
         self.file_folder = FileFolder(source=self.source, size=self.size)
 
     def tearDown(self):
         # Close the FileFolder and remove the temporary directory
-        self.file_folder.__exit__(None, None, None)
+        self.file_folder.close()
         os.remove(self.source)
         os.rmdir(self.test_dir)
+
     def test_put_and_get_file(self):
         # Test adding a new file
         file_name = 'test_file.txt'
         file_content = 'This is a test file.'
         self.assertTrue(self.file_folder.put(file_name, file_content))
-
         # Test retrieving the same file
         file = self.file_folder.get(file_name)
         self.assertIsNotNone(file)
@@ -42,7 +44,6 @@ class TestFileFolder(unittest.TestCase):
         updated_content = 'updated'
         self.assertTrue(self.file_folder.put(file_name, initial_content))
         self.assertTrue(self.file_folder.put(file_name, updated_content))
-
         # Check if the content was updated
         file = self.file_folder.get(file_name)
         self.assertEqual(file.content, updated_content)
@@ -52,7 +53,6 @@ class TestFileFolder(unittest.TestCase):
         file_name = 'remove_file.txt'
         file_content = 'content'
         self.file_folder.put(file_name, file_content)
-
         # Remove the file and try to get it
         removed_file = self.file_folder.remove(file_name)
         self.assertIsNotNone(removed_file)
@@ -68,19 +68,24 @@ class TestFileFolder(unittest.TestCase):
         self.assertEqual(len(listed_files), len(file_names))
         for name, _ in listed_files:
             self.assertIn(name, file_names)
+
     def test_size_update_on_put_and_remove(self):
         # Check initial size
-        initial_size = self.file_folder._FileFolder__size  # Accessing the private variable for testing
+        # Accessing the private variable for testing
+        initial_size = self.file_folder.get_free_space()
         self.assertEqual(initial_size, self.size)
 
         # Add a new file and check size decrement
         file_name = 'test_size_file.txt'
         file_content = 'Size test'
         self.assertTrue(self.file_folder.put(file_name, file_content))
-        self.assertEqual(self.file_folder._FileFolder__size, initial_size - len(file_content))
+        self.assertEqual(self.file_folder.get_free_space(),
+                         initial_size - len(file_content))
 
         # Remove the file and check size increment
         self.file_folder.remove(file_name)
-        self.assertEqual(self.file_folder._FileFolder__size, initial_size)
+        self.assertEqual(self.file_folder.get_free_space(), initial_size)
+
+
 if __name__ == '__main__':
     unittest.main()

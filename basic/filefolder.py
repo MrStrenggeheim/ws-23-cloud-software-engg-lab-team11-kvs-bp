@@ -14,10 +14,18 @@ class File:
 class FileFolder:
     def __init__(self, source="filefolder.sqlite", size=10) -> None:
         """
-        Initialize a file folder with limited space
+        Initialize a file folder with limited space.
+
+        If folder is not created yet, create a datasource associated with the folder and save the size of folder under keyword `size`.
+        In case folder is already created, read `size` from datasource to initialize the folder size
         """
         self.__folder = SqliteDict(source)
-        self.__size = size
+        if "size" in self.__folder:
+            self.__size = self.__folder["size"]
+        else:
+            self.__size = size
+            self.__folder["size"] = size
+            self.__folder.commit()
 
     def __enter__(self):
         """
@@ -31,6 +39,13 @@ class FileFolder:
         """
         self.__folder.close()
 
+    def __update(self) -> None:
+        """
+        Update the datasource after modification
+        """
+        self.__folder["size"] = self.__size
+        self.__folder.commit()
+
     def put(self, name: str, content: str) -> bool:
         """
         Put the file into the folder.
@@ -43,9 +58,11 @@ class FileFolder:
         :return: The status of `put` operation. Return `True` if file is added/updated; otherwise, `False` 
         :rtype: bool
 
-        Note that `File.size`, `File.last_modified` and `FileFolder.size` should be considered
+        Note:
+        - `File.size`, `File.last_modified` and `FileFolder.size` should be considered
+        - Update the datasource after the operation ends
         """
-        if name not in self.__folder and len(content) > self.__size:
+        if name == "size" or name not in self.__folder and len(content) > self.__size:
             # print(f" {len(content), self.__size=} --> OVER THE CAPACITY!!")
             return False
         elif name in self.__folder:
@@ -63,7 +80,7 @@ class FileFolder:
                 content=content,
                 last_modified=datetime.now()
             )
-        self.__folder.commit()
+        self.__update()
         return True
 
     def get(self, name: str) -> File | None:
@@ -74,7 +91,7 @@ class FileFolder:
         :return: The file with given name in the folder. Return `None` if there is no file with the specified name
         :rtype: File or None
         """
-        if name in self.__folder:
+        if name != "size" and name in self.__folder:
             return self.__folder[name]
         else:
             return None
@@ -87,13 +104,15 @@ class FileFolder:
         :return: The removed file with given name. Return `None` if there is no file with the specified name
         :rtype: File or None
 
-        Note that `FileFolder.size` should be considered
+        Note:
+        - `FileFolder.size` should be considered
+        - Update the datasource after the operation ends
         """
-        if name in self.__folder:
+        if name != "size" and name in self.__folder:
             file = self.__folder[name]
             del self.__folder[name]
             self.__size += len(file.content)
-            self.__folder.commit()
+            self.__update()
             return file
         else:
             return None
@@ -105,4 +124,10 @@ class FileFolder:
         :return: List of files in the folder
         :rtype: tuple of str and File
         """
-        return [(name, file) for name, file in self.__folder.items()]
+        return [(name, file) for name, file in self.__folder.items() if name != "size"]
+
+    def get_free_space(self) -> int:
+        return self.__size
+
+    def close(self) -> None:
+        self.__folder.close()
