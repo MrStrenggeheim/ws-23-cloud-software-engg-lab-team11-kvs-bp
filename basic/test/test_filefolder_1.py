@@ -1,10 +1,10 @@
 import unittest
+import tempfile
 import os
 if __name__ == "__main__":
     import sys
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from filefolder import FileFolder
-import tempfile
 
 
 class TestFileFolder1(unittest.TestCase):

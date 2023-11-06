@@ -59,6 +59,7 @@ class FileFolder:
         :rtype: bool
 
         Note:
+        - Make sure file name not the built-in keyword `size`
         - `File.size`, `File.last_modified` and `FileFolder.size` should be considered
         - Update the datasource after the operation ends
         """
@@ -90,6 +91,8 @@ class FileFolder:
         :param str name: The file name
         :return: The file with given name in the folder. Return `None` if there is no file with the specified name
         :rtype: File or None
+
+        Note that file name cannot be the built-in keyword `size`
         """
         if name != "size" and name in self.__folder:
             return self.__folder[name]
@@ -105,6 +108,7 @@ class FileFolder:
         :rtype: File or None
 
         Note:
+        - Make sure file name not the built-in keyword `size`
         - `FileFolder.size` should be considered
         - Update the datasource after the operation ends
         """
@@ -123,6 +127,8 @@ class FileFolder:
 
         :return: List of files in the folder
         :rtype: tuple of str and File
+
+        Note that the built-in keyword `size` should not be in the list
         """
         return [(name, file) for name, file in self.__folder.items() if name != "size"]
 
