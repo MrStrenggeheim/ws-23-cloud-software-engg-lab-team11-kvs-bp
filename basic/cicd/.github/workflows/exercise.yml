@@ -1,0 +1,32 @@
+name: Run exercise
+
+on: [push]
+
+jobs:
+  run-exercise:
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Make dict
+        run: python exercise.py md
+      
+      - name: Convert dict to json
+        run: python exercise.py d2j
+      
+      - name: Check json
+        run: python exercise.py cj
+      
+      - name: Cleanup
+        run: rm exercise-data.sqlite data.json
